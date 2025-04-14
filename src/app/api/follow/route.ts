@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     // Check if target user exists
     const targetUser = await User.findById(followingId);
     if (!targetUser) {
+      console.error("Target user not found");
       return NextResponse.json(
         { error: "Target user not found" },
         { status: 404 }
