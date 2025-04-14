@@ -57,7 +57,7 @@ export default function UserProfilePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: profile.id,
+          targetUserId: profile.id, // Changed from userId to targetUserId to match API expectation
         }),
       });
 
@@ -72,6 +72,10 @@ export default function UserProfilePage() {
               : prev.followersCount + 1,
           };
         });
+      } else {
+        // Add error handling for non-OK responses
+        const errorData = await response.json();
+        console.error("Follow error:", errorData);
       }
     } catch (error) {
       console.error("Error toggling follow:", error);
