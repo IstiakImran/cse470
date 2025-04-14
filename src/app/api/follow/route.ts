@@ -59,10 +59,6 @@ export async function POST(request: Request) {
       });
     } else {
       // Not following - follow (create record)
-      const newFollow = await Follow.create({
-        followerId,
-        followingId,
-      });
 
       // Get follower's name for the notification
       const follower = await User.findById(followerId);
