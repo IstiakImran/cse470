@@ -7,7 +7,7 @@ const LandingPage = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Connect with people who matter
+            Connect with people who matters!
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Join millions of people sharing ideas, experiences, and moments that
