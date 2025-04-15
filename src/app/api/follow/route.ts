@@ -64,6 +64,12 @@ export async function POST(request: Request) {
       const follower = await User.findById(followerId);
       const followerName = `${follower?.firstName} ${follower?.lastName}`;
 
+      // Create the follow record - THIS WAS MISSING
+      await Follow.create({
+        followerId,
+        followingId,
+      });
+
       // Create notification for the user being followed
       await Notification.create({
         userId: followingId,
