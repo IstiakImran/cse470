@@ -1,3 +1,4 @@
+// models/User.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
@@ -18,6 +19,7 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   resetToken?: string;
   resetTokenExpiry?: Date;
+  supabaseId?: string; // New field for Supabase user ID
 }
 
 const userSchema = new Schema<IUser>(
@@ -47,6 +49,7 @@ const userSchema = new Schema<IUser>(
     isEmailVerified: { type: Boolean, default: false },
     resetToken: String,
     resetTokenExpiry: Date,
+    supabaseId: String, // New field for Supabase user ID
   },
   { timestamps: true }
 );

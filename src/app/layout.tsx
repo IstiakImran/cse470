@@ -5,6 +5,8 @@ import AuthProvider from "./context/AuthProvider";
 import Navbar from "@/components/custionUi/Navbar";
 import { Toaster as SonnerToaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Header } from "@/components/layout/header";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

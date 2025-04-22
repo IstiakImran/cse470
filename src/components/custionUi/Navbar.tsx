@@ -210,6 +210,18 @@ export default function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/chat" className="flex w-full items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Chat</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/groups" className="flex w-full items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Groups</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link
                     href="/profile/edit"
                     className="flex w-full items-center"

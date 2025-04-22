@@ -127,7 +127,7 @@ export default function PostCard({
 
   const loadComments = async () => {
     try {
-      const response = await fetch(`/api/post/${post.id}/comments`);
+      const response = await fetch(`/api/normal-post/${post.id}/comments`);
       const data = await response.json();
       if (response.ok) {
         setComments(data.comments);
@@ -141,7 +141,7 @@ export default function PostCard({
     if (!newComment.trim()) return;
 
     try {
-      const response = await fetch(`/api/post/${post.id}/comments`, {
+      const response = await fetch(`/api/normal-post/${post.id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: newComment }),
