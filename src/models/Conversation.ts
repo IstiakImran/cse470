@@ -32,28 +32,21 @@ const conversationSchema = new Schema<IConversation>(
   { timestamps: true }
 );
 
-// Create a compound index for participants to ensure unique conversations between the same users
-conversationSchema.index(
-  { participants: 1 },
-  {
-    unique: true,
-    // This makes MongoDB consider the array elements order-independent
-    // So [user1, user2] is treated the same as [user2, user1]
-    partialFilterExpression: { participants: { $size: 2 } },
-  }
-);
+// Remove the problematic unique index that's causing conflicts
+// We'll handle uniqueness in our findOrCreateConversation method instead
 
 // Helper method to find or create a conversation between users
 conversationSchema.statics.findOrCreateConversation = async function (
   userIds: string[]
 ): Promise<IConversation> {
+  // Convert to ObjectId and sort consistently
   const sortedUserIds = userIds
     .map((id) => new mongoose.Types.ObjectId(id))
     .sort((a, b) => a.toString().localeCompare(b.toString()));
 
-  // Try to find existing conversation
+  // Try to find existing conversation with either order of participants
   let conversation = await this.findOne({
-    participants: { $all: sortedUserIds },
+    participants: { $size: sortedUserIds.length, $all: sortedUserIds },
   });
 
   // Create new conversation if it doesn't exist
@@ -63,10 +56,24 @@ conversationSchema.statics.findOrCreateConversation = async function (
       unreadCount[userId.toString()] = 0;
     });
 
-    conversation = await this.create({
-      participants: sortedUserIds,
-      unreadCount,
-    });
+    try {
+      conversation = await this.create({
+        participants: sortedUserIds,
+        unreadCount,
+      });
+    } catch (error) {
+      // In case of a race condition where another request created the conversation
+      if ((error as any).code === 11000) {
+        conversation = await this.findOne({
+          participants: { $size: sortedUserIds.length, $all: sortedUserIds },
+        });
+        if (!conversation) {
+          throw error; // Re-throw if we still can't find it
+        }
+      } else {
+        throw error; // Re-throw non-duplicate errors
+      }
+    }
   }
 
   return conversation;

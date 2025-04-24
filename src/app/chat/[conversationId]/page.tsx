@@ -50,12 +50,15 @@ export default function ChatPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isSending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const processedMessageIds = useRef(new Set());
 
   useEffect(() => {
     if (conversationId) {
       setMessages([]);
+      processedMessageIds.current.clear();
       setPage(1);
       setHasMore(true);
       setLoading(true);
@@ -70,9 +73,7 @@ export default function ChatPage() {
       }
 
       // Fetch conversation participants if we don't have them
-      if (!otherUser) {
-        fetchConversationParticipants();
-      }
+      fetchConversationParticipants();
     }
   }, [conversationId, session?.user?.id]);
 
@@ -105,16 +106,37 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (socket && session?.user?.id) {
+      // Clean up previous listeners
+      socket.off("receive-message");
+      socket.off("user-typing");
+
       // Listen for new messages
       socket.on("receive-message", (message: Message) => {
         if (message.conversationId === conversationId) {
-          setMessages((prev) => [...prev, message]); // Add message at the end
+          // Check if we've already processed this message ID
+          if (!processedMessageIds.current.has(message._id)) {
+            processedMessageIds.current.add(message._id);
 
-          // Mark message as read immediately
-          socket.emit("mark-read", {
-            senderId: session.user.id,
-            conversationId,
-          });
+            setMessages((prev) => {
+              // Make sure we're not adding duplicates
+              const exists = prev.some((msg) => msg._id === message._id);
+              if (exists) return prev;
+              return [...prev, message];
+            });
+
+            // Mark message as read immediately if from other user
+            const isSenderOtherUser =
+              typeof message.senderId === "object"
+                ? message.senderId._id !== session.user.id
+                : message.senderId !== session.user.id;
+
+            if (isSenderOtherUser) {
+              socket.emit("mark-read", {
+                senderId: session.user.id,
+                conversationId,
+              });
+            }
+          }
         }
       });
 
@@ -163,6 +185,11 @@ export default function ChatPage() {
 
       const data: MessagesResponse = await response.json();
 
+      // Track message IDs we've seen to avoid duplicates
+      data.messages.forEach((msg) => {
+        processedMessageIds.current.add(msg._id);
+      });
+
       // Find the other user from the first message or via a separate API call
       if (data.messages.length > 0 && !otherUser) {
         const msg = data.messages[0];
@@ -195,7 +222,7 @@ export default function ChatPage() {
       if (pageToFetch === 1) {
         setMessages(data.messages);
       } else {
-        setMessages((prev) => [...prev, ...data.messages]);
+        setMessages((prev) => [...data.messages, ...prev]);
       }
 
       setHasMore(
@@ -217,10 +244,16 @@ export default function ChatPage() {
 
     if (
       !inputMessage.trim() ||
-      !otherUser ||
       !session?.user?.id ||
-      !conversationId
+      !conversationId ||
+      isSending
     ) {
+      return;
+    }
+
+    // Required check - we might not have otherUser yet if the conversation is new
+    if (!otherUser) {
+      console.error("Cannot send message - recipient not found");
       return;
     }
 
@@ -231,7 +264,8 @@ export default function ChatPage() {
     };
 
     try {
-      const optimisticId = Date.now().toString();
+      setSending(true);
+      const optimisticId = `temp-${Date.now()}`;
       const originalMessage = inputMessage;
       setInputMessage("");
 
@@ -239,14 +273,14 @@ export default function ChatPage() {
       const optimisticMessage: Message = {
         _id: optimisticId,
         content: originalMessage,
-        senderId: session.user.id, // ✅ now a string
+        senderId: session.user.id, // Will be a string
         receiverId: otherUser._id,
         read: false,
         createdAt: new Date().toISOString(),
         conversationId,
       };
 
-      setMessages((prev) => [...prev, optimisticMessage]); // Add message at the end
+      setMessages((prev) => [...prev, optimisticMessage]);
 
       // Send message via API
       const response = await fetch("/api/messages", {
@@ -265,6 +299,18 @@ export default function ChatPage() {
 
       const responseData = await response.json();
 
+      // Add the real message ID to our processed set to avoid duplicates
+      processedMessageIds.current.add(responseData.message._id);
+
+      // Replace the optimistic message with the real one
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === optimisticId
+            ? { ...msg, _id: responseData.message._id }
+            : msg
+        )
+      );
+
       // If using sockets, also send via socket for real-time
       if (socket && isConnected) {
         socket.emit("send-message", {
@@ -277,10 +323,12 @@ export default function ChatPage() {
       console.error("Error sending message:", error);
       // Remove the optimistic message on error
       setMessages((prev) =>
-        prev.filter((msg) => msg._id !== Date.now().toString())
+        prev.filter((msg) => msg._id !== `temp-${Date.now()}`)
       );
       // Show error to user
       alert("Failed to send message. Please try again.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -333,6 +381,9 @@ export default function ChatPage() {
       </div>
     );
   }
+
+  // Calculate if button should be enabled
+  const isSendButtonEnabled = inputMessage.trim().length > 0 && !isSending;
 
   return (
     <div className="flex flex-col h-full">
@@ -490,8 +541,9 @@ export default function ChatPage() {
           />
           <button
             type="submit"
+            disabled={!isSendButtonEnabled}
             className={`p-2 rounded-r-lg ${
-              inputMessage.trim() && otherUser
+              isSendButtonEnabled
                 ? "bg-blue-500 hover:bg-blue-600"
                 : "bg-blue-300 cursor-not-allowed"
             } transition-colors`}
