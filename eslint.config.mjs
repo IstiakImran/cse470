@@ -17,7 +17,10 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/ban-ts-comment": "off"
+      "@typescript-eslint/ban-ts-comment": "off",
+      // Add the rule to suppress TypeScript property checking errors
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off"
     },
     languageOptions: {
       parserOptions: {

@@ -14,8 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { User, LogOut, Settings, Sun, Moon } from "lucide-react";
+import { User, LogOut, Settings, Sun, Moon, Bell } from "lucide-react";
 import { ModeToggle } from "./theme-toggle";
+import NotificationDropdown from "./notification-dropdown";
 
 interface UserResult {
   id: number;
@@ -32,11 +33,33 @@ export default function Navbar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<UserResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on clicks outside
+  // Fetch unread notification count
+  useEffect(() => {
+    if (session) {
+      fetchUnreadCount();
+    }
+  }, [session]);
+
+  async function fetchUnreadCount() {
+    try {
+      const res = await fetch("/api/notifications/count");
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.count);
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  }
+
+  // Close dropdowns on clicks outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -44,6 +67,13 @@ export default function Navbar() {
         !dropdownRef.current.contains(e.target as Node)
       ) {
         setShowDropdown(false);
+      }
+
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(e.target as Node)
+      ) {
+        setShowNotifications(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -103,6 +133,10 @@ export default function Navbar() {
     setShowDropdown(false);
   }
 
+  function toggleNotifications() {
+    setShowNotifications(!showNotifications);
+  }
+
   // Get user initials for avatar fallback
   const getUserInitials = () => {
     if (!session?.user?.name) return "U";
@@ -120,7 +154,7 @@ export default function Navbar() {
         {/* Logo / Brand */}
         <div className="flex items-center gap-4">
           <Link href={"/"}>
-            <h2 className="text-foreground text-lg font-bold leading-tight tracking-[-0.015em] t">
+            <h2 className="text-foreground text-lg font-bold leading-tight tracking-[-0.015em]">
               Connected
             </h2>
           </Link>
@@ -159,7 +193,32 @@ export default function Navbar() {
         {/* Right-side Buttons */}
         <div className="flex items-center gap-4">
           {/* Theme Toggle */}
-          <ModeToggle></ModeToggle>
+          <ModeToggle />
+
+          {/* Notifications - Only show when logged in */}
+          {session && (
+            <div className="relative" ref={notificationRef}>
+              <Button
+                variant="ghost"
+                className="relative rounded-full h-8 w-8 p-0 flex items-center justify-center"
+                onClick={toggleNotifications}
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Button>
+
+              {showNotifications && (
+                <NotificationDropdown
+                  onClose={() => setShowNotifications(false)}
+                  onNotificationsRead={() => setUnreadCount(0)}
+                />
+              )}
+            </div>
+          )}
 
           {/* Auth Buttons */}
           {session ? (

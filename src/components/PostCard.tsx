@@ -58,7 +58,7 @@ export default function PostCard({
 
   const handleLike = async () => {
     try {
-      const response = await fetch("/api/posts/like", {
+      const response = await fetch("/api/normal-posts/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ postId: post.id }),
@@ -80,7 +80,7 @@ export default function PostCard({
     }
 
     try {
-      const response = await fetch(`/api/posts/${post.id}`, {
+      const response = await fetch(`/api/normal-posts/${post.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: editedContent }),
@@ -98,7 +98,7 @@ export default function PostCard({
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/posts/${post.id}`, {
+      const response = await fetch(`/api/normal-posts/${post.id}`, {
         method: "DELETE",
       });
 
@@ -113,7 +113,7 @@ export default function PostCard({
 
   const handleShare = async () => {
     try {
-      const response = await fetch(`/api/posts/${post.id}/share`, {
+      const response = await fetch(`/api/normal-posts/${post.id}/share`, {
         method: "POST",
       });
 
@@ -127,7 +127,7 @@ export default function PostCard({
 
   const loadComments = async () => {
     try {
-      const response = await fetch(`/api/normal-post/${post.id}/comments`);
+      const response = await fetch(`/api/normal-posts/${post.id}/comments`);
       const data = await response.json();
       if (response.ok) {
         setComments(data.comments);
@@ -141,7 +141,7 @@ export default function PostCard({
     if (!newComment.trim()) return;
 
     try {
-      const response = await fetch(`/api/normal-post/${post.id}/comments`, {
+      const response = await fetch(`/api/normal-posts/${post.id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: newComment }),
