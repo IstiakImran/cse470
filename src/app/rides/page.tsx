@@ -848,7 +848,7 @@ export default function RideSharingPage() {
 
       // Redirect to conversation if there is one
       if (data.conversationId) {
-        router.push(`/messages/${data.conversationId}`);
+        router.push(`/chat/${data.conversationId}`);
       } else {
         // Just refresh the ride list
         fetchRideRequests();
