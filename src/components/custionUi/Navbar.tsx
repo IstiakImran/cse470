@@ -14,7 +14,16 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { User, LogOut, Settings, Sun, Moon, Bell } from "lucide-react";
+import {
+  User,
+  LogOut,
+  Settings,
+  Sun,
+  Moon,
+  Bell,
+  BarChart,
+  Shield,
+} from "lucide-react";
 import { ModeToggle } from "./theme-toggle";
 import NotificationDropdown from "./notification-dropdown";
 
@@ -39,6 +48,9 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  // Check if user is admin
+  const isAdmin = session?.user?.isAdmin || false;
 
   // Fetch unread notification count
   useEffect(() => {
@@ -295,6 +307,37 @@ export default function Navbar() {
                     <span>Edit Profile</span>
                   </Link>
                 </DropdownMenuItem>
+
+                {/* Admin Section - Only show for admins */}
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1">
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        Admin
+                      </p>
+                    </div>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/admin/reports"
+                        className="flex w-full items-center"
+                      >
+                        <BarChart className="mr-2 h-4 w-4" />
+                        <span>Reports</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/admin/alumni-verification"
+                        className="flex w-full items-center"
+                      >
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Alumni Verification</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => signOut()}
