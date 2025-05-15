@@ -1,4 +1,3 @@
-// models/User.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
@@ -19,7 +18,15 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   resetToken?: string;
   resetTokenExpiry?: Date;
-  supabaseId?: string; // New field for Supabase user ID
+  supabaseId?: string;
+  blockedUsers: mongoose.Types.ObjectId[]; // Users that this user has blocked
+  isAdmin: boolean; // Added admin flag
+  isAlumni: boolean; // Alumni verification status
+  alumniVerificationStatus: "unverified" | "pending" | "verified" | "rejected";
+  alumniIdNumber?: string; // Student/Alumni ID number
+  alumniCertificateLink?: string; // Link to graduation certificate
+  alumniVerificationRequestDate?: Date; // When the verification was requested
+  alumniVerificationNotes?: string; // Admin notes about verification
 }
 
 const userSchema = new Schema<IUser>(
@@ -30,7 +37,7 @@ const userSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true },
     bio: String,
     profilePicture: String,
-    contactNumber: { type: String, unique: true },
+    contactNumber: { type: String, unique: true, sparse: true },
     themePreference: {
       type: String,
       enum: ["light", "dark"],
@@ -49,7 +56,19 @@ const userSchema = new Schema<IUser>(
     isEmailVerified: { type: Boolean, default: false },
     resetToken: String,
     resetTokenExpiry: Date,
-    supabaseId: String, // New field for Supabase user ID
+    supabaseId: String,
+    blockedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    isAdmin: { type: Boolean, default: false }, // Added with default value false
+    isAlumni: { type: Boolean, default: false },
+    alumniVerificationStatus: {
+      type: String,
+      enum: ["unverified", "pending", "verified", "rejected"],
+      default: "unverified",
+    },
+    alumniIdNumber: String,
+    alumniCertificateLink: String,
+    alumniVerificationRequestDate: Date,
+    alumniVerificationNotes: String,
   },
   { timestamps: true }
 );

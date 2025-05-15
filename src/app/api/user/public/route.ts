@@ -1,4 +1,3 @@
-//api/user/public
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/dbConnect";
 import User from "@/models/User";
@@ -54,19 +53,29 @@ export async function GET(req: Request) {
       updatedAt: post.updatedAt,
     }));
 
-    // Check if the current user is following this profile
-    let isFollowing = false;
+    // Get session information for the current user
     const session = await getServerSession(authOptions);
+    let isFollowing = false;
+    let isBlocked = false;
 
     if (session && session.user.id !== userId) {
       const viewerId = session.user.id;
 
+      // Check if the viewer is following this profile
       const followCheck = await Follow.findOne({
         followerId: new mongoose.Types.ObjectId(viewerId),
         followingId: new mongoose.Types.ObjectId(userId),
       });
 
       isFollowing = !!followCheck;
+
+      // Check if the viewer has blocked this profile
+      const currentUser = await User.findById(viewerId);
+      if (currentUser) {
+        isBlocked = currentUser.blockedUsers.some(
+          (id: mongoose.Types.ObjectId) => id.toString() === userId
+        );
+      }
     }
 
     // Format the response
@@ -87,6 +96,10 @@ export async function GET(req: Request) {
       followersCount,
       followingCount,
       isFollowing,
+      isBlocked,
+      isAlumni: (user as any).isAlumni || false,
+      alumniVerificationStatus:
+        (user as any).alumniVerificationStatus || "unverified",
     };
 
     return NextResponse.json(userProfile);

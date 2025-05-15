@@ -7,6 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostCard from "@/components/PostCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import {
+  MoreHorizontal,
+  Pencil,
+  ShieldAlert,
+  GraduationCap,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import AlumniVerificationStatus from "@/components/AlumniVerificationStatus";
+import AlumniVerificationModal from "@/components/AlumniVerificationModal";
 
 interface Profile {
   id: string;
@@ -23,6 +40,9 @@ interface Profile {
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
+  const router = useRouter();
+  const { data: session, update } = useSession();
 
   useEffect(() => {
     fetchProfile();
@@ -68,6 +88,24 @@ export default function ProfilePage() {
     }
   };
 
+  const navigateToEditProfile = () => {
+    router.push("/profile/edit");
+  };
+
+  const navigateToBlockList = () => {
+    router.push("/profile/block-list");
+  };
+
+  const openVerificationModal = () => {
+    setVerificationModalOpen(true);
+  };
+
+  const handleVerificationSubmitted = () => {
+    // This will be called after successful verification submission
+    // We'll update the session to reflect the new pending status
+    update();
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-2xl space-y-4">
@@ -80,13 +118,50 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
+  // Determine whether to show verification option based on status
+  const showVerificationOption =
+    !session?.user.isAlumni &&
+    (session?.user.alumniVerificationStatus === "unverified" ||
+      session?.user.alumniVerificationStatus === "rejected");
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <Card>
         <CardHeader className="relative">
-          <div className="absolute top-4 right-4">
-            <Button variant="outline">Edit Profile</Button>
+          <div className="absolute top-4 right-4 flex space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={navigateToEditProfile}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Profile
+                </DropdownMenuItem>
+
+                {showVerificationOption && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={openVerificationModal}>
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      {session?.user.alumniVerificationStatus === "rejected"
+                        ? "Verify Alumni Status Again"
+                        : "Verify Alumni Status"}
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={navigateToBlockList}>
+                  <ShieldAlert className="mr-2 h-4 w-4" />
+                  Blocked Users
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
           <div className="flex flex-col items-center space-y-4">
             <Avatar className="h-24 w-24">
               <AvatarImage src={profile.profilePicture || ""} />
@@ -102,6 +177,10 @@ export default function ProfilePage() {
               <p className="text-muted-foreground">{profile.email}</p>
             </div>
             <p className="text-center max-w-md">{profile.bio}</p>
+
+            {/* Alumni Verification Status component */}
+            <AlumniVerificationStatus />
+
             <div className="flex space-x-4">
               <div className="text-center">
                 <p className="font-bold">{profile.followersCount}</p>
@@ -154,6 +233,13 @@ export default function ProfilePage() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Alumni Verification Modal */}
+      <AlumniVerificationModal
+        open={verificationModalOpen}
+        onOpenChange={setVerificationModalOpen}
+        onVerificationSubmitted={handleVerificationSubmitted}
+      />
     </div>
   );
 }

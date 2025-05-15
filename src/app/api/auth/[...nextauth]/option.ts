@@ -57,6 +57,10 @@ export const authOptions: NextAuthOptions = {
             contactNumber: user.contactNumber || "",
             email: user.email,
             isEmailVerified: user.isEmailVerified,
+            isAdmin: user.isAdmin || false, // Include admin status
+            isAlumni: user.isAlumni || false, // Include alumni status
+            alumniVerificationStatus:
+              user.alumniVerificationStatus || "unverified",
           };
         } catch (error) {
           console.error("Authorization error:", error);
@@ -84,6 +88,9 @@ export const authOptions: NextAuthOptions = {
           contactNumber: user.contactNumber,
           email: user.email,
           isEmailVerified: user.isEmailVerified,
+          isAdmin: user.isAdmin, // Add isAdmin to JWT token
+          isAlumni: user.isAlumni, // Add isAlumni to JWT token
+          alumniVerificationStatus: user.alumniVerificationStatus,
         };
       }
       return token;
@@ -96,6 +103,10 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email as string;
         session.user.isEmailVerified = token.isEmailVerified as boolean;
         session.user.contactNumber = token.contactNumber as string;
+        session.user.isAdmin = token.isAdmin as boolean; // Include isAdmin in session
+        session.user.isAlumni = token.isAlumni as boolean; // Include isAlumni in session
+        session.user.alumniVerificationStatus =
+          token.alumniVerificationStatus as string;
       }
       return session;
     },

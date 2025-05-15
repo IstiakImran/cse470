@@ -281,6 +281,12 @@ export default function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/rides" className="flex w-full items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Rides</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link
                     href="/profile/edit"
                     className="flex w-full items-center"

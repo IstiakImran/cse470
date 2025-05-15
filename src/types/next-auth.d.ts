@@ -8,6 +8,13 @@ declare module "next-auth" {
     contactNumber?: string;
     email?: string;
     isEmailVerified?: boolean; // Match the email verification field from your schema
+    isAdmin?: boolean;
+    isAlumni?: boolean;
+    alumniVerificationStatus?:
+      | "unverified"
+      | "pending"
+      | "verified"
+      | "rejected";
   }
 
   interface Session {
@@ -18,6 +25,9 @@ declare module "next-auth" {
       contactNumber?: string;
       email?: string;
       isEmailVerified?: boolean;
+      isAdmin?: boolean;
+      isAlumni?: boolean;
+      alumniVerificationStatus?: any;
     };
   }
 }
@@ -30,5 +40,8 @@ declare module "next-auth/jwt" {
     contactNumber?: string;
     email?: string;
     isEmailVerified?: boolean; // Email verification field
+    isAdmin?: boolean;
+    isAlumni?: boolean;
+    alumniVerificationStatus?: string;
   }
 }

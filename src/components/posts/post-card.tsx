@@ -11,6 +11,7 @@ import {
   Share,
   Trash,
   FileHeart as HeartFilled,
+  Flag,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,6 +23,8 @@ import { timeAgo } from "@/lib/utils";
 import { CommentSection } from "@/components/posts/comment-section";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Image from "next/image";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import ReportModal from "../ReportModal";
 
 interface User {
   _id: string;
@@ -54,6 +57,8 @@ export function PostCard({
   onDelete,
 }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [error, setError] = useState("");
 
   // Fix: Ensure post.likes is an array before calling includes
   const isLiked =
@@ -61,6 +66,33 @@ export function PostCard({
       ? post.likes.includes(currentUserId)
       : false;
   const isAuthor = currentUserId === post.userId._id;
+
+  const handleReportSubmit = async (reason: string) => {
+    setIsReportModalOpen(false);
+    try {
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetType: "Post",
+          targetId: post._id,
+          postId: post._id, // Set postId for Post reports
+          reason,
+        }),
+      });
+
+      if (response.ok) {
+        // Show success message or notification
+        alert("Report submitted successfully");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to submit report");
+      }
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      setError("An error occurred while submitting the report");
+    }
+  };
 
   return (
     <Card>
@@ -80,14 +112,14 @@ export function PostCard({
               </p>
             </div>
           </div>
-          {isAuthor && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {isAuthor && (
                 <DropdownMenuItem
                   onClick={onDelete}
                   className="text-destructive"
@@ -95,9 +127,13 @@ export function PostCard({
                   <Trash className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+              <DropdownMenuItem onClick={() => setIsReportModalOpen(true)}>
+                <Flag className="h-4 w-4 mr-2" />
+                Report
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="prose dark:prose-invert max-w-none">
@@ -168,6 +204,18 @@ export function PostCard({
       {showComments && (
         <CommentSection postId={post._id} currentUserId={currentUserId} />
       )}
+
+      {error && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
     </Card>
   );
 }

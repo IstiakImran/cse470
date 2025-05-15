@@ -27,6 +27,7 @@ import {
   Globe,
   Users,
   Lock,
+  Flag,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -36,17 +37,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import ReportModal from "./ReportModal";
+import Image from "next/image";
 
 interface PostCardProps {
   post: any;
   onPostDeleted: (postId: string) => void;
   onPostLiked: (postId: string, liked: boolean) => void;
+  currentUserId?: string;
 }
 
 export default function PostCard({
   post,
   onPostDeleted,
   onPostLiked,
+  currentUserId,
 }: PostCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
@@ -55,6 +60,7 @@ export default function PostCard({
   const [newComment, setNewComment] = useState("");
   const [error, setError] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const handleLike = async () => {
     try {
@@ -170,21 +176,55 @@ export default function PostCard({
     }
   };
 
+  const handleReportSubmit = async (reason: string) => {
+    setIsReportModalOpen(false);
+    try {
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetType: "Post",
+          targetId: post.id || post._id,
+          postId: post.id || post._id, // Set postId for Post reports
+          reason,
+        }),
+      });
+
+      if (response.ok) {
+        // Show success message or notification
+        alert("Report submitted successfully");
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to submit report");
+      }
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      setError("An error occurred while submitting the report");
+    }
+  };
+
+  // Check if current user is the post author
+  const isAuthor =
+    currentUserId === (post.userId?._id || post.userId || post.user?.id);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center space-x-4 p-4">
         <Avatar>
-          <AvatarImage src={post.user.profilePicture || ""} />
+          <AvatarImage
+            src={post.user?.profilePicture || post.userId?.profilePicture || ""}
+          />
           <AvatarFallback>
-            {post.user.firstName[0]}
-            {post.user.lastName[0]}
+            {(post.user?.firstName || post.userId?.firstName)?.[0]}
+            {(post.user?.lastName || post.userId?.lastName)?.[0]}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold">
-                {post.user.firstName} {post.user.lastName}
+                {post.user?.firstName || post.userId?.firstName}{" "}
+                {post.user?.lastName || post.userId?.lastName}
               </p>
               <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                 <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
@@ -199,16 +239,24 @@ export default function PostCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                {isAuthor && (
+                  <>
+                    <DropdownMenuItem onClick={handleEdit}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuItem onClick={() => setIsReportModalOpen(true)}>
+                  <Flag className="mr-2 h-4 w-4" />
+                  Report
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -241,7 +289,9 @@ export default function PostCard({
           <>
             <p className="whitespace-pre-wrap">{post.content}</p>
             {post.imageUrl && (
-              <img
+              <Image
+                width={500}
+                height={500}
                 src={post.imageUrl}
                 alt="Post"
                 className="mt-4 rounded-lg max-h-96 w-full object-cover"
@@ -260,7 +310,8 @@ export default function PostCard({
             onClick={handleLike}
           >
             <Heart className="mr-2 h-4 w-4" />
-            {post.likesCount}
+            {post.likesCount ||
+              (Array.isArray(post.likes) ? post.likes.length : 0)}
           </Button>
           <Button
             variant="ghost"
@@ -271,7 +322,7 @@ export default function PostCard({
             }}
           >
             <MessageCircle className="mr-2 h-4 w-4" />
-            {comments.length}
+            {comments.length || post.commentCount || 0}
           </Button>
           <Button variant="ghost" size="sm" onClick={handleShare}>
             <Share2 className="mr-2 h-4 w-4" />
@@ -284,18 +335,27 @@ export default function PostCard({
         <div className="border-t p-4">
           <div className="space-y-4">
             {comments.map((comment) => (
-              <div key={comment.id} className="flex space-x-2">
+              <div key={comment.id || comment._id} className="flex space-x-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>
-                    {comment.userName.split(" ").map((n: string) => n[0])}
+                    {comment.userName || comment.user?.firstName?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{comment.userName}</p>
+                  <p className="text-sm font-medium">
+                    {comment.userName ||
+                      `${comment.user?.firstName} ${comment.user?.lastName}`}
+                  </p>
                   <p className="text-sm">{comment.content}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(comment.createdAt))} ago
                   </p>
+                  <button
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Report
+                  </button>
                 </div>
               </div>
             ))}
@@ -340,6 +400,12 @@ export default function PostCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
     </Card>
   );
 }

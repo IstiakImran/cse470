@@ -249,7 +249,7 @@ const CreateRideForm = ({ onCreated }: { onCreated: () => void }) => {
                   <option value="AutoRickshaw">Auto Rickshaw</option>
                   <option value="CNG">CNG</option>
                   <option value="Car">Car</option>
-                  <option value="Hicks">Hicks</option>
+                  <option value="Hicks">Hiace</option>
                 </select>
               </div>
 

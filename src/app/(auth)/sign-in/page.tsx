@@ -1,12 +1,13 @@
 "use client";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Users, Mail, Lock, ArrowRight, MessageSquare } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { toast } from "sonner"; // Added toast import
 
 export default function SignIn() {
   const [identifier, setIdentifier] = useState("");
@@ -25,7 +26,23 @@ export default function SignIn() {
     if (result?.error) {
       setError(result.error);
     } else {
-      router.push("/feed");
+      // Check if this is the first time login
+      const isFirstTimeLogin = localStorage.getItem("isFirstTimeLogin");
+
+      // If no record exists or it's explicitly set to true, it's a first time login
+      if (!isFirstTimeLogin || isFirstTimeLogin === "true") {
+        // Set the flag to false for future logins
+        localStorage.setItem("isFirstTimeLogin", "false");
+
+        // Show toast notification
+        toast.success("Welcome! Please complete your profile to get started.");
+
+        // Redirect to edit profile page
+        router.push("/profile/edit");
+      } else {
+        // For returning users, go to the feed
+        router.push("/feed");
+      }
     }
   };
 
