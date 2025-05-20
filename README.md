@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CONNECTED - CSE470 Software Engineering Project
 
-## Getting Started
+## Group No: 10
 
-First, run the development server:
+**Section:** 17
+**Semester:** Fall2025
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Group Members:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* **Istiak Al Imran** (22301040)
+* **Jotee Sarkar Joy** (22301001)
+* **Md. Asaduzzaman** (24341184)
+* **Rabsa Anjum Proshongsha** (24241347)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Submitted To:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Md Rifat Alam Pomil**
+**Submitted Date:** 11-03-2025
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📌 Project Overview
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**CONNECTED** is a social and functional networking platform designed for BRAC University students and alumni. It includes user authentication, community groups, a ride-sharing system, and additional engagement tools like messaging, reporting, and alumni verification.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## ✅ Functional Requirements
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Module 1: User Registration & Authentication
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* BRAC GSuite-only registration/login/logout
+* OTP verification through GSuite
+* Profile editing after login
+* Prompt for profile completion on first login
+* Follow/unfollow functionality
+
+### Module 2: Community Groups & Alumni Interaction
+
+* Create and manage community groups
+* Join/leave groups
+* Group posts with like/comment
+* Chat between users and alumni
+
+### Module 3: Ride-Sharing Feature
+
+* Post ride details (time, price, seats, location)
+* Search/filter rides
+* Request/join ride & confirmation notifications
+* Cancel or manage ride participation
+
+### Module 4: Additional Features
+
+* In-app notifications
+* Report inappropriate content
+* Block/mute users
+* Alumni verification request
+* User search functionality
+
+---
+
+## 🛠️ Technology Stack
+
+* **Frontend:** Nextjs, Tailwind CSS
+* **Backend:** Nextjs
+* **Database:** MongoDB
+* **Authentication:** Google GSuite OAuth
+* **Version Control:** Git, GitHub
+
+---
+
+
+## 🔗 GitHub Repository
+
+[https://github.com/IstiakImran/cse470.git](https://github.com/IstiakImran/cse470.git)
+
+
+
+---
+
+## 👥 Individual Contributions
+
+### Istiak Al Imran (22301040)
+
+* Developed GSuite-based login and registration system
+* Implemented OTP-based email verification
+* Redirect for first-time login profile setup
+* Ride filtering API based on location/date/seats
+* Backend for user-alumni chat feature
+
+### Jotee Sarkar Joy (22301001)
+
+* User following and follow-back system
+* Notification system (UI and logic)
+* Ride listing form and logic (departure, pricing, seats)
+* Frontend for ride cancellation and management
+
+### Md. Asaduzzaman (24341184)
+
+* Community group creation/join/leave logic
+* Alumni-user chat acceptance and message flow
+* Ride join request and confirmation
+* User blocking/muting and content reporting module
+
+### Rabsa Anjum Proshongsha (24241347)
+
+* Profile editing functionality
+* Group post creation with comment/like system
+* Alumni verification request form
+* User search feature (name/role based)
+
+---
